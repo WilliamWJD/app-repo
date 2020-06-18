@@ -10,6 +10,7 @@ export default class Repository extends Component {
         repository: {},
         issues: [],
         loading: true,
+        filter: 'all',
     };
 
     async componentDidMount() {
@@ -33,8 +34,21 @@ export default class Repository extends Component {
         });
     }
 
+    async componentDidUpdate(_, prevState) {
+        const { filter } = this.state;
+        const { match } = this.props;
+        const repoName = decodeURIComponent(match.params.repository);
+
+        if (prevState.filter !== filter) {
+            const response = await api.get(
+                `/repos/${repoName}/issues?state=${filter}`
+            );
+            console.log(response.data);
+        }
+    }
+
     render() {
-        const { repository, issues, loading } = this.state;
+        const { repository, issues, loading, filter } = this.state;
 
         if (loading) {
             return <Loading>Carregando</Loading>;
@@ -51,6 +65,12 @@ export default class Repository extends Component {
                     <h1>{repository.name}</h1>
                     <p>{repository.description}</p>
                 </Owner>
+
+                <select name="" id="">
+                    <option value="all">All</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                </select>
 
                 <IssueList>
                     {issues.map((issue) => (

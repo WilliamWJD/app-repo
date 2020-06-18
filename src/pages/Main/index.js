@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
 
@@ -7,43 +7,34 @@ import api from '../../services/api';
 import { Form, SubmitButton, List } from './styles';
 import Container from '../../components/Container';
 
-export default class Main extends Component {
-    state = {
-        newRepo: '',
-        repositories: [],
-        loading: false,
-        errorRepo: false,
-    };
+const Main = () => {
+    const [newRepo, setNewRepo] = useState('');
+    const [repositories, setRepositories] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [errorRepo, setErrorRepo] = useState(false);
 
-    componentDidMount() {
-        const repositories = localStorage.getItem('repositories');
-        if (repositories) {
-            this.setState({ repositories: JSON.parse(repositories) });
+    useEffect(() => {
+        async function loadRepositories() {
+            const repo = localStorage.getItem('repositories');
+            if (repo) {
+                setRepositories(JSON.parse(repo));
+            }
         }
-    }
+        loadRepositories();
+    }, []);
 
-    componentDidUpdate(_, prevState) {
-        const { repositories } = this.state;
+    useEffect(() => {
+        localStorage.setItem('repositories', JSON.stringify(repositories));
+    }, [repositories]);
 
-        if (prevState.repositories !== repositories) {
-            localStorage.setItem('repositories', JSON.stringify(repositories));
-        }
-    }
-
-    handleInputChange = (e) => {
-        this.setState({ newRepo: e.target.value });
-    };
-
-    handleSubmit = async (e) => {
+    async function handleSubmit(e) {
         try {
             e.preventDefault();
 
-            this.setState({ loading: true });
-
-            const { newRepo, repositories } = this.state;
+            setLoading(true);
 
             if (newRepo === '') {
-                this.setState({ errorRepo: true });
+                setErrorRepo(true);
                 throw new Error('Insira um repositório válido');
             }
 
@@ -52,67 +43,62 @@ export default class Main extends Component {
             );
 
             if (checkRepoExist) {
-                this.setState({ errorRepo: true });
+                setErrorRepo(true);
                 throw new Error('Repositório duplicado');
             }
 
             const response = await api.get(`/repos/${newRepo}`);
 
             const data = { name: response.data.full_name };
-            this.setState({
-                repositories: [...repositories, data],
-                newRepo: '',
-                loading: false,
-                errorRepo: false,
-            });
+
+            setRepositories([...repositories, data]);
+            setNewRepo('');
+            setLoading(false);
+            setErrorRepo(false);
         } catch (error) {
             alert(error);
         } finally {
-            this.setState({ loading: false });
+            setLoading(false);
         }
-    };
-
-    render() {
-        const { newRepo, loading, repositories, errorRepo } = this.state;
-
-        return (
-            <Container>
-                <h1>
-                    <FaGithubAlt />
-                    Repositórios
-                </h1>
-
-                <Form onSubmit={this.handleSubmit} errorRepo={errorRepo}>
-                    <input
-                        type="text"
-                        placeholder="Adicionar repositório"
-                        value={newRepo}
-                        onChange={this.handleInputChange}
-                    />
-                    <SubmitButton loading={loading}>
-                        {loading ? (
-                            <FaSpinner color="#fff" size={14} />
-                        ) : (
-                            <FaPlus color="#fff" size={14} />
-                        )}
-                    </SubmitButton>
-                </Form>
-
-                <List>
-                    {repositories.map((repo) => (
-                        <li key={repo.name}>
-                            <span>{repo.name}</span>
-                            <Link
-                                to={`/repository/${encodeURIComponent(
-                                    repo.name
-                                )}`}
-                            >
-                                Detalhes
-                            </Link>
-                        </li>
-                    ))}
-                </List>
-            </Container>
-        );
     }
-}
+
+    return (
+        <Container>
+            <h1>
+                <FaGithubAlt />
+                Repositórios
+            </h1>
+
+            <Form onSubmit={handleSubmit} errorRepo={errorRepo}>
+                <input
+                    type="text"
+                    placeholder="Adicionar repositório"
+                    value={newRepo}
+                    onChange={(e) => setNewRepo(e.target.value)}
+                />
+                <SubmitButton loading={loading}>
+                    {loading ? (
+                        <FaSpinner color="#fff" size={14} />
+                    ) : (
+                        <FaPlus color="#fff" size={14} />
+                    )}
+                </SubmitButton>
+            </Form>
+
+            <List>
+                {repositories.map((repo) => (
+                    <li key={repo.name}>
+                        <span>{repo.name}</span>
+                        <Link
+                            to={`/repository/${encodeURIComponent(repo.name)}`}
+                        >
+                            Detalhes
+                        </Link>
+                    </li>
+                ))}
+            </List>
+        </Container>
+    );
+};
+
+export default Main;
