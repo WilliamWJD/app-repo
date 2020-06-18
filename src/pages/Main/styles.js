@@ -15,7 +15,7 @@ export const Form = styled.form`
         ${(props) =>
             props.errorRepo &&
             css`
-                border: 1px solid red;
+                border: 1px solid #e74c3c;
             `}
     }
 `;

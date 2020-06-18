@@ -80,6 +80,10 @@ export const IssueList = styled.ul`
                         color: #7159c1;
                     }
                 }
+
+                /* span{
+                    backgro
+                } */
             }
 
             p {
