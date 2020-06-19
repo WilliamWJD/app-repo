@@ -33,6 +33,10 @@ const Repository = (props) => {
         loadRepo();
     }, []);
 
+    function handleFilterSelect(e) {
+        setFilter(e.target.value);
+    }
+
     return (
         <>
             {loading ? (
@@ -49,7 +53,7 @@ const Repository = (props) => {
                         <p>{repository.description}</p>
                     </Owner>
 
-                    <select name="" id="">
+                    <select name="" id="" onChange={handleFilterSelect}>
                         <option value="all">All</option>
                         <option value="open">Open</option>
                         <option value="closed">Closed</option>
